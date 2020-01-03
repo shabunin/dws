@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Vladimir Shabunin"
+	],
+	"copyright": "Copyright © 2020, Vladimir Shabunin",
+	"description": "Simple WS pub/sub server implementation",
+	"license": "MIT",
+	"name": "dws"
+}
