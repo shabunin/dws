@@ -31,7 +31,7 @@ class MyPubSub: WsListener {
   this(ushort port) {
     super(port);
   }
-  void publish(string[] channels, string message) {
+  void publish(string[] channels, JSONValue message) {
     // check channel and message
     foreach(Subscription s; subs) {
       foreach(string channel; channels) {
@@ -41,7 +41,7 @@ class MyPubSub: WsListener {
           json2publish.array[0] = JSONValue(-1);
           json2publish.array[1] = JSONValue(PUBLISH);
           json2publish.array[2] = JSONValue(channel);
-          json2publish.array[3] = JSONValue(message);
+          json2publish.array[3] = message;
           sendWsMessage(s.sock, json2publish.toJSON());
         }
       }
@@ -153,7 +153,6 @@ class MyPubSub: WsListener {
       case PUBLISH:
         try {
           string[] channels;
-          string message;
 
           // check request array len
           if (j.array.length < 4) {
@@ -175,11 +174,7 @@ class MyPubSub: WsListener {
           }
 
           JSONValue jmessage = j.array[3];
-          if (jmessage.type() != JSONType.string) {
-            throw new Exception("Message field in not string");
-          }
-          message = jmessage.str;
-          publish(channels, message);
+          publish(channels, jmessage);
           sendResponse(JSONValue("success"), JSONValue(0));
         } catch(Exception e) {
           sendResponse(JSONValue("error"), JSONValue(e.message));

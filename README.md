@@ -35,6 +35,7 @@ Examples of requests:
 [6, "publish", ["hello", "friend"], "message"]
 [7, "publish", ["world", "friend"], "message"]
 [8, "publish", ["hello", "world"], "message"]
+[9, "publish", ["hello", "world"], {"key": "value"}]
 ```
 
 Response examples:
