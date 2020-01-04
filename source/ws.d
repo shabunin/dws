@@ -205,7 +205,7 @@ class WsListener: ListenerSocket {
       // decode msg
       ubyte[] decoded;
       decoded.length = msglen;
-      ubyte[4] masks = bytes[offset..offset+3];
+      ubyte[4] masks = bytes[offset..offset+4];
       offset += 4;
 
       for (auto i = 0; i < msglen; ++i) {
