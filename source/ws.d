@@ -134,7 +134,6 @@ class WsListener: ListenerSocket {
     super(port);
   }
   override void onMessage(Socket sock, string addr, char[] data) {
-    auto sockAddr = sock.remoteAddress.toString();
     auto s = data.toUTF8();
     try {
       validate(s);
@@ -142,6 +141,9 @@ class WsListener: ListenerSocket {
     } catch(Exception e) {
       //writeln("NOT correct UTF8 string?");
       auto bytes = cast(ubyte[]) data;
+      if (bytes.length < 2) {
+        return;
+      }
       bool fin = (bytes[0] & 0b10000000) != 0;
 
       // mask must be true, "All messages from the client to the server have this bit set"
@@ -169,13 +171,22 @@ class WsListener: ListenerSocket {
       ulong msglen = bytes[1] - 128; 
       int offset = 2;
       if (msglen == 126) {
+        if (bytes.length < 4) {
+          return;
+        }
         msglen = bytes.peek!ushort(2);
         offset = 4;
       } else if (msglen == 127) {
+        if (bytes.length < 10) {
+          return;
+        }
         msglen = bytes.peek!ulong(2);
         offset = 10;
       }
       if (msglen > MAX_MSGLEN || msglen == 0) {
+        return;
+      }
+      if (bytes.length < offset + 4) {
         return;
       }
 
@@ -215,18 +226,18 @@ class WsListener: ListenerSocket {
       string text = (cast(char[])decoded).toUTF8();
       // if whole frame or the end of fragmented
       if (fin) {
-        if (((sockAddr in fragmented) !is null) && (opcode == 0x00)) {
-          fragmented[sockAddr] ~= text;
+        if (((addr in fragmented) !is null) && (opcode == 0x00)) {
+          fragmented[addr] ~= text;
           // the end of fragmented frame
-          onWsMessage(sock, addr, fragmented[sockAddr]);
-          fragmented.remove(sockAddr);
+          onWsMessage(sock, addr, fragmented[addr]);
+          fragmented.remove(addr);
         } else if (opcode == 0x01) {
           // whole frame
           onWsMessage(sock, addr, text);
         }
       } else if (opcode == 0x01) {
         // if the beginning of fragmented frame
-        fragmented[sockAddr] = text;
+        fragmented[addr] = text;
         // now wait for other messages, but from this client
       }
 
