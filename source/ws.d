@@ -23,7 +23,7 @@ import std.base64;
 import std.utf;
 import std.bitmanip;
 
-enum BUFF_SIZE = 4096;
+enum BUFF_SIZE = 32768;
 enum MAX_MSGLEN = 65535;
 
 class ListenerSocket {
@@ -183,7 +183,11 @@ class WsListener: ListenerSocket {
         msglen = bytes.peek!ulong(2);
         offset = 10;
       }
+      /*
       if (msglen > MAX_MSGLEN || msglen == 0) {
+        return;
+      } */
+      if (msglen == 0) {
         return;
       }
       if (bytes.length < offset + 4) {

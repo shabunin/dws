@@ -1,3 +1,42 @@
+/**
+  This module provedes simple websocket pubsub service.
+  
+  Connected client may subsribe/unsubscribe to channels and publish messages.
+
+  Subscribe/unsubscribe request should has following structure:
+  [<req_id>, <method>, <channels>]
+  where
+  <req_id> - int or string. So, result with this id will be send to client.
+  <method> - string. "subscribe"/"unsubscribe".
+  <channels> - string or array of strings.
+
+  Publish request: 
+  [<req_id>, <method>, <channels>, <message>]
+  where message is any valid json.
+
+  Any request should be valid JSON.
+
+  Copyright (c) 2020 Vladimir Shabunin
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+  
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+  **/
+
 import core.thread;
 import std.algorithm : remove;
 import std.stdio;
@@ -9,16 +48,7 @@ import ws;
 const string PUBLISH = "publish";
 const string SUBSCRIBE = "subscribe";
 const string UNSUBSCRIBE = "unsubscribe";
-
-// TODO: some king of WAMP (wamp-proto.org)
-// but more lightweight
-// register RPCs(actions). get list of all actions.
-// use in scenes. e.g. actions in domain "user"
-// actions in domain "debug"
-// etc
-// 
-// >> or just simple pubsub model? reqs with response_channel
-// basically, it's the same
+const string DEBUG_CHANNEL = "dws_debug_channel";
 
 struct Subscription {
   string channel;
@@ -35,7 +65,7 @@ class MyPubSub: WsListener {
     // check channel and message
     foreach(Subscription s; subs) {
       foreach(string channel; channels) {
-        if (s.channel == channel) {
+        if (s.channel == channel || s.channel == DEBUG_CHANNEL) {
           auto json2publish = parseJSON("[]");
           json2publish.array.length = 4;
           json2publish.array[0] = JSONValue(-1);
